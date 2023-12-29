@@ -1,0 +1,42 @@
+import requests,openpyxl
+from bs4 import BeautifulSoup
+from urllib.request import urlopen
+
+excel=openpyxl.Workbook()
+print(excel.sheetnames)
+sheet=excel.active
+sheet.title="Top rated movies"
+print(excel.sheetnames)
+sheet.append(["Movie Rank","Movie Name","Movie Released Year","Movie Rating"])
+
+
+try:
+    headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
+
+    response= requests.get("https://www.imdb.com/chart/top/",headers=headers,verify=False)
+    response.raise_for_status()
+    soup=BeautifulSoup(response.content,"html.parser")
+    movies=soup.find("ul",class_="ipc-metadata-list ipc-metadata-list--dividers-between sc-71ed9118-0 kxsUNk compact-list-view ipc-metadata-list--base").find_all("li",class_="ipc-metadata-list-summary-item sc-3f724978-0 enKyEL cli-parent")
+    
+
+    for movie in movies:
+        name=(movie.find("h3",class_="ipc-title__text").text).split('.')[1]
+        rank=(movie.find("h3",class_="ipc-title__text").text).split('.')[0]
+        year=(movie.find("span",class_="sc-43986a27-8 jHYIIK cli-title-metadata-item").text)
+        rating=(movie.find("span",class_="ipc-rating-star ipc-rating-star--base ipc-rating-star--imdb sc-9ab53865-1 iXEijC ratingGroup--imdb-rating").text).split( )[0]
+        print(rank,name,year,rating)
+        sheet.append([rank,name,year,rating])
+
+
+
+except Exception as e:
+    print(e)
+
+
+excel.save("IMDB Movie Rtaings.xlsx")
+
+#<span aria-label="IMDb rating: 9.3" class="ipc-rating-star ipc-rating-star--base ipc-rating-star--imdb sc-9ab53865-1 iXEijC ratingGroup--imdb-rating" data-testid="ratingGroup--imdb-rating"><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" class="ipc-icon ipc-icon--star-inline" viewBox="0 0 24 24" fill="currentColor" role="presentation"><path d="M12 20.1l5.82 3.682c1.066.675 2.37-.322 2.09-1.584l-1.543-6.926 5.146-4.667c.94-.85.435-2.465-.799-2.567l-6.773-.602L13.29.89a1.38 1.38 0 0 0-2.581 0l-2.65 6.53-6.774.602C.052 8.126-.453 9.74.486 10.59l5.147 4.666-1.542 6.926c-.28 1.262 1.023 2.26 2.09 1.585L12 20.099z"></path></svg>9.3<span class="ipc-rating-star--voteCount">&nbsp;(2.8M)</span></span>
+#<span class="sc-43986a27-8 jHYIIK cli-title-metadata-item">1994</span>
+
+
